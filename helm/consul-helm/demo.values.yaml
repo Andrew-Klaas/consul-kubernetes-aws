@@ -1,0 +1,22 @@
+global:
+  enabled: true
+  image: "consul:1.4.0"
+  datacenter: us-east-1
+
+server:
+  enabled: false
+client:
+  enabled: true
+  grpc: true
+  extraConfig: |
+    {
+      "retry_join": ["provider=aws tag_key=consul-servers tag_value=consul-example"]
+    }
+
+dns:
+  enabled: true
+
+syncCatalog:
+  enabled: true
+connectInject:
+  enabled: true
