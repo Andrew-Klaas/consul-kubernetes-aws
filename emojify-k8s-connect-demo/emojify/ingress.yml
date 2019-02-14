@@ -1,0 +1,80 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emojify-ingress-configmap
+data:
+  config: |
+    events {
+      worker_connections  1024;
+    }
+
+    http {
+      upstream emojify-website {
+        server emojify-website.default.svc.cluster.local:5000;
+      }
+      upstream emojify-api {
+        server emojify-api.default.svc.cluster.local:9090;
+      }
+
+      server {
+        location / {
+          proxy_pass http://emojify-website;
+          proxy_set_header Host $host;
+        }
+
+        location ~ ^/api(/.*)?$ {
+          proxy_pass http://emojify-api$1$is_args$args;
+          proxy_pass_request_headers on;
+        }
+      }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emojify-ingress
+  labels:
+    app: emojify-ingress
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: emojify-ingress
+  template:
+    metadata:
+      labels:
+        app: emojify-ingress
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: emojify-ingress-configmap
+          items:
+          - key: config
+            path: nginx.conf
+      containers:
+      - name: emojify-ingress
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /etc/nginx/
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emojify-ingress
+spec:
+  selector:
+    app: emojify-ingress
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer

@@ -10,7 +10,7 @@ client:
   grpc: true
   extraConfig: |
     {
-      "retry_join": ["provider=aws tag_key=consul-servers tag_value=consul-example"]
+      "retry_join": ["provider=aws tag_key=ConsulAutoJoinTag tag_value=stenio-consul-cluster"]
     }
 
 dns:

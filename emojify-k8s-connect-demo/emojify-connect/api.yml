@@ -1,0 +1,35 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emojify-api
+  labels:
+    app: emojify-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emojify-api
+  template:
+    metadata:
+      labels:
+        app: emojify-api
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service-port": "9090"
+        "consul.hashicorp.com/connect-service-upstreams": "emojify-facebox:8002"
+    spec:
+      containers:
+      - name: emojify-api
+        image: "nicholasjackson/emojify-api:0.5.6"
+        imagePullPolicy: IfNotPresent
+        command: ["/service/emojify-api"]
+        args: [
+          "-bind-address=127.0.0.1:9090",
+          "-allow-origin=*",
+          "-authn-disable=true",
+          "-path=/"
+        ]
+        env:
+        - name: FACEBOX
+          value: http://127.0.0.1:8002
