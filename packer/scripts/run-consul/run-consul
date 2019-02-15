@@ -306,6 +306,9 @@ EOF
   $gossip_encryption_configuration
   $rpc_encryption_configuration
   $autopilot_configuration
+  "connect": {
+    "enabled": true
+  },
   "ui": $ui
 }
 EOF

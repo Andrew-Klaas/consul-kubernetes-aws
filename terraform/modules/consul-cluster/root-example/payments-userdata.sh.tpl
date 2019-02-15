@@ -72,10 +72,10 @@ EOF
 sudo systemctl enable payment-proxy.service
 sudo systemctl add-wants multi-user.target payment-proxy.service
 
-sudo systemctl start payment.service
-sudo systemctl start payment-proxy.service
+#consul services register /etc/consul.d/payment-service.json
 
-consul services register /etc/consul.d/payment-service.json
+#sudo systemctl start payment.service
+#sudo systemctl start payment-proxy.service
 
 echo "[---creating Consul intentions---]"
 consul intention create -deny emojify-api emojify-facebox

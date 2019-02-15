@@ -29,7 +29,7 @@ module "consul_servers" {
 
   cluster_name  = "${var.cluster_name}-server"
   cluster_size  = "${var.num_servers}"
-  instance_type = "t2.micro"
+  instance_type = "t2.medium"
 
   # The EC2 Instances will use these tags to automatically discover each other and form a cluster
   cluster_tag_key   = "${var.cluster_tag_key}"
