@@ -104,7 +104,7 @@ ssh -i PATH-TO-YOUR-PEM-KEY ubutu@PRIVATEIP
 sudo systemctl start payment.service
 sudo systemctl start payment-proxy.service
 consul services register /etc/consul.d/payment-service.json
-```
+
 
 tree emojify-connect
 # The diff will show what changes required to enable connect. You will see that instead of relying on public ip address, now it is pointing to internal address. This is to leverage the proxy, which will manage the connections using secure TLS.
