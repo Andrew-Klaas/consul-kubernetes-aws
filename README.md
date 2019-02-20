@@ -38,7 +38,13 @@ packer build -var-file=vars.json packer.json
 ```
 
 ### Terraform
-- Update variables.tf with any desired custom values, including ami id
+- Update variables.tf with any desired custom values, in particular:
+```
+. ami id of the packer image you created
+. aws_org: id of your AWS org
+. aws_user_name: your aws user name
+. ssh_key_name: ensure you have an existing ec2 key in aws. If not instructions on how to create [here](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html)
+```
 - Ensure aws-iam-authenticator binary is accessible from PATH
 - Execute
 ```
@@ -56,7 +62,7 @@ http://PUBLIC-IP:8500
 ### Deploy Helm
 - Configure kubectl:
 ```
-kubeconfig_path=$(pwd)
+# Enter the path to the kubeconfig file created in the terraform folder:
 export KUBECONFIG=PATH/TO/kubeconfig_stenio-eks-cluster
 # validate it can find remote
 kubectl get svc
@@ -78,6 +84,7 @@ cd ../helm
 under "MB_KEY"
 
 ### Demo
+#### Show emojify app, within Kubernetes
 - Go to Consul server public IP, port 8500
 - Ensure kubernetes is listed
 - Deploy app
@@ -89,10 +96,31 @@ kubectl get svc
 kubectl describe svc emojify-ingress | awk -F\: '/LoadBalancer Ingress/ {gsub(/ /, "", $0); print $2}'
 
 Image example: https://www.irishexaminer.com/remote/snappa.static.pressassociation.io/assets/2014/12/05100314/1417773793-16b42d184fe6d4dc27f5abf844e783c2-1038x576.jpg?width=600
+```
+#### Show emojify app, connecting to payments app outside kubernetes
+- Ensure payments app is running in the consul client
+```
+ssh -i PATH-TO-YOUR-PEM-KEY ubutu@PRIVATEIP
+sudo systemctl start payment.service
+sudo systemctl start payment-proxy.service
+consul services register /etc/consul.d/payment-service.json
+```
 
 tree emojify-connect
+# The diff will show what changes required to enable connect. You will see that instead of relying on public ip address, now it is pointing to internal address. This is to leverage the proxy, which will manage the connections using secure TLS.
 git diff --no-index -- emojify/api.yml emojify-connect/api.yml
 kubectl apply -f ./emojify-connect
+# If app fails, ensure intentions are allowed
+
+# Now let's enable the payments app and update emojify to use it
+ssh -i YOUR-AWS-KEY ubuntu@IP-CONSUL-CLIENT
+# Register payments service in Consul
+consul services register /etc/consul.d/payment-service.json
+# Start payments service and proxy
+sudo systemctl start payment.service
+sudo systemctl start payment-proxy.service
+exit
+# Now, back to emojify. The diff shows what changes needed to enable payments
 git diff --no-index -- emojify-connect/api.yml emojify-enterprise/api.yml
 kubectl apply -f ./emojify-enterprise
 ```
